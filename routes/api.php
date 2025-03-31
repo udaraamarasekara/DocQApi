@@ -14,8 +14,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/sessions/{clinic}', [CommonController::class, 'sessionsForClinic']);
     Route::get('/allDoctors', [CommonController::class, 'allDoctors']);
     Route::get('/allClinics', [CommonController::class, 'allClinics']);
-    Route::get('/mySession/{doctor}', [CommonController::class, 'getNearstSessionForDoc']);
-    Route::put('/mySession/{doctor}', [CommonController::class, 'setSessionAvailability']);
+    Route::get('/mySession', [CommonController::class, 'getNearstSessionForDoc']);
+    Route::get('/appointments/{session}', [CommonController::class, 'appointments']);
+    Route::put('/setSessionAvailability/{session}', [CommonController::class, 'setSessionAvailability']);
     Route::get('/categoriesOfClinic/{clinic}', [CommonController::class, 'categoriesOfClinic']);
     Route::post('/appointment', [CommonController::class, 'newAppointment']);
     Route::put('/startAppointment/{appointment}', [CommonController::class, 'startAppointment']);

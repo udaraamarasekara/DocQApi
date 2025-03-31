@@ -28,13 +28,13 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Test User6',
                 'email' => 'test6@example.com',
                 'password' => Hash::make('password6'),
-                'role'=>'doctor'
+                'role'=>'nurse'
             ],
             [
                 'name' => 'Test User7',
                 'email' => 'test7@example.com',
                 'password' => Hash::make('password7'),
-                'role'=>'doctor'
+                'role'=>'nurse'
             ]
             ];
 

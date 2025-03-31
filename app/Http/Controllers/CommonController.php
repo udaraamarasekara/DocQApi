@@ -14,19 +14,21 @@ use Exception;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
-
+use Illuminate\Support\Facades\DB;
 class CommonController extends Controller
 {
     // Register
     public function register(Request $request)
-    {
+    { 
+        try {
+      
         $request->validate([
             'name'     => 'required|string|max:50',
             'email'    => 'required|email|unique:users',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => 'required|string|min:6|',
         ]);
 
-        try {
+       
             User::create([
                 'name'     => $request->name,
                 'email'    => $request->email,
@@ -35,8 +37,7 @@ class CommonController extends Controller
             ]);
 
             return response()->json(['success' => 'You registered!']);
-        } catch (\Exception $e) {
-            Log::error('Register error: ' . $e->getMessage());
+        } catch (Exception $e) {
             return response()->json(['error' => 'Something went wrong!'], 500);
         }
     }
@@ -60,8 +61,9 @@ class CommonController extends Controller
         $token = $user->createToken('api-token')->plainTextToken;
 
         return response()->json([
-            'user'  => $user,
-            'token' => $token,
+            'name'  => $user->name,
+            'role'=> $user->role,
+            'token' => $token
         ]);
     }
 
@@ -149,35 +151,45 @@ class CommonController extends Controller
     public function allClinics()
     {
       try{  
-      return response()->json(Clinic::all());  
-      }
+        return response()->json(Clinic::select('id', 'name', 'image')->get());
+    }
       catch(Exception $e)
       {
         Log::error('sessionsForClinic error: ' . $e->getMessage());
         return response()->json(['error' => 'Something went wrong!'], 500);
       }
     }
-    public function getNearstSessionForDoc(int $doctor_id)
+    public function getNearstSessionForDoc()
     {
         try {
-            $now = Carbon::now();
-    
-            $session = DocSession::where('doctor_id', $doctor_id)
-                ->where('date', '>=', $now) // only future or today
-                ->orderBy('date', 'asc')    // earliest date first
+            $now = Carbon::now()->toDateString(); // Convert to YYYY-MM-DD to avoid time mismatches
+        
+            $doctor = Doctor::where('user_id', auth()->user()->id)->first();
+        
+            if (!$doctor) {
+                return response()->json(['error' => 'Doctor not found'], 404);
+            }
+        
+            $session = DocSession::where('doctor_id', $doctor->id)
+                ->where('availability', '!=', 'finished')
+                ->whereDate('date', '>=', $now) // Ensures only future or today (without time issues)
+                ->orderBy('date', 'asc')
                 ->first();
-    
+        
             if ($session) {
                 return response()->json([
+                    'id'     => $session->id,
                     'date'   => $session->date,
-                    'clinic' => $session->clinic->name ?? 'N/A',
+                    'clinic' => $session->clinic->name ?? 'N/A', // Safe check for clinic
+                    'status' => $session->availability,
                 ]);
             } else {
                 return response()->json(['message' => 'No upcoming sessions found.']);
             }
         } catch (\Exception $e) {
+            \Log::error('Session Fetch Error: ' . $e->getMessage()); // Log error instead of dd()
             return response()->json(['error' => 'Something went wrong!'], 500);
-        }      
+        }
     }
 
     public function categoriesOfClinic(int $clinic_id)
@@ -201,24 +213,37 @@ class CommonController extends Controller
         }  
     }
 
-     public function appointments(int $session_id)
-     {
-       try{ 
-       return  response()->json(Appointment::where('session_id',$session_id)->get());
-       }
-       catch(Exception $e)
-       {
+    public function appointments($session_id)
+{
+    try {
+        $appointments = DB::table('appointments')
+            ->join('users', 'appointments.patient_id', '=', 'users.id')
+            ->select(
+                'appointments.id as id',
+                'users.name as name',
+                'appointments.token as token',
+                'appointments.status as status'
+            )->where('session_id',$session_id)
+            ->get();
+
+        return response()->json($appointments, 200);
+
+    } catch (Exception $e) {
+        // Log the errordd()
         Log::error('sessionsForClinic error: ' . $e->getMessage());
+
+        // Return JSON response with error message
         return response()->json(['error' => 'Something went wrong!'], 500);
-       } 
     }
+}
 
      public function setSessionAvailability(Request $request,int $session_id)
      {
       try{  
        $request->validate(['availability'=>Rule::in(['ongoing','finished'])]);  
-       return(DocSession::where('id',$session_id)->update(['availability'=>$request->availability])); 
-      }
+       DocSession::where('id',$session_id)->update(['availability'=>$request->availability]);
+       return response()->json(['success' => 'Done!']);
+    }
       catch(Exception $e)
       {
         Log::error('sessionsForClinic error: ' . $e->getMessage());
