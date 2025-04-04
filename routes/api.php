@@ -9,9 +9,9 @@ Route::post('/register', [CommonController::class, 'register']);
 Route::post('/login', [CommonController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/clinics/{doctor}', [CommonController::class, 'clinicsForDoctor']);
-    Route::get('/doctors/{clinic}', [CommonController::class, 'doctorsForClinic']);
-    Route::get('/sessions/{clinic}', [CommonController::class, 'sessionsForClinic']);
+    Route::get('/sessionsForDoctor/{doctor}', [CommonController::class, 'sessionsForDoctor']);
+    Route::get('/sessionsForClinic/{clinic}', [CommonController::class, 'sessionsForClinic']);
+    Route::get('/doctorsForClinic/{clinic}', [CommonController::class, 'doctorsForClinic']);
     Route::get('/allDoctors', [CommonController::class, 'allDoctors']);
     Route::get('/allClinics', [CommonController::class, 'allClinics']);
     Route::get('/mySession', [CommonController::class, 'getNearstSessionForDoc']);
@@ -21,6 +21,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/appointment', [CommonController::class, 'newAppointment']);
     Route::put('/startAppointment/{appointment}', [CommonController::class, 'startAppointment']);
     Route::put('/endAppointment/{appointment}', [CommonController::class, 'endAppointment']);
+    Route::get('/categories', [CommonController::class, 'categories']);
+
 
     Route::post('/logout', [CommonController::class, 'logout']);
 });

@@ -72,7 +72,8 @@ class DatabaseSeeder extends Seeder
             ['name'=>'Psycology'],
             [ 'name'=>'oral'],
             ['name'=>'eye surgan'],
-            [ 'name'=>'heart specialist']
+            [ 'name'=>'heart specialist'],
+            [ 'name'=>'Neurology']
              ];
     
            foreach($categories as $category)
@@ -103,8 +104,12 @@ class DatabaseSeeder extends Seeder
         ]);
         }
         $clinics=[
-            ['name'=>'nawaloka','image'=>'clinic1.jpg'],
-            [ 'name'=>'nawapuloka','image'=>'clinic2.jpg'],
+            ['name'=>'nawaloka','image'=>'clinic1.jpg' ,'description'=>'Nawaloka Family Health Clinic provides comprehensive medical care for individuals and families. Our team of experienced doctors and nurses offers services such as general check-ups, vaccinations, chronic disease management, and minor procedures. We prioritize patient-centered care, ensuring a comfortable and supportive environment for all our visitors.
+
+'],
+            [ 'name'=>'nawapuloka','image'=>'clinic2.jpg','description'=>'nawapuloka Family Health Clinic provides comprehensive medical care for individuals and families. Our team of experienced doctors and nurses offers services such as general check-ups, vaccinations, chronic disease management, and minor procedures. We prioritize patient-centered care, ensuring a comfortable and supportive environment for all our visitors.
+
+'],
 
              ];
         

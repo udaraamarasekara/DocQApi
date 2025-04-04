@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\DocSession;
 use App\Models\Doctor;
 use App\Models\Clinic;
+use App\Models\Category;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Validation\ValidationException;
@@ -68,7 +69,7 @@ class CommonController extends Controller
     }
 
     // Get clinics for a doctor
-    public function clinicsForDoctor(int $doctor_id)
+    public function sessionsForDoctor(int $doctor_id)
     {
         try {
             $result = [];
@@ -77,8 +78,13 @@ class CommonController extends Controller
             foreach ($sessions as $session) {
                 if ($session->clinic) {
                     $result[] = [
+                        'id'   => $session->id,
+                        'date' =>  $session->date,
+                        'status' => $session->availability,
                         'name'  => $session->clinic->name,
                         'image' => $session->clinic->image,
+                        'is_booked' => Appointment::where('session_id',$session->id)->where('patient_id',auth()->user()->id)->exists()
+
                     ];
                 }
             }
@@ -95,13 +101,15 @@ class CommonController extends Controller
     {
         try {
             $result = [];
-            $sessions = DocSession::where('clinic_id', $clinic_id)->with('doctor.user')->get();
+            $sessions = DocSession::where('clinic_id', $clinic_id)->with(['doctor.category','doctor.user'])->get();
 
             foreach ($sessions as $session) {
                 if ($session->doctor && $session->doctor->user) {
                     $result[] = [
+                        'id' => $session->doctor->id,
                         'name'  => $session->doctor->user->name,
                         'image' => $session->doctor->image,
+                        'category' => $session->doctor->category->name
                     ];
                 }
             }
@@ -118,14 +126,17 @@ class CommonController extends Controller
     {
         try {
             $result = [];
-            $sessions = DocSession::where('clinic_id', $clinic_id)->with('doctor.user')->get();
+            $sessions = DocSession::where('clinic_id', $clinic_id)->with(['doctor.user','doctor.category'])->get();
 
             foreach ($sessions as $session) {
                 if ($session->doctor && $session->doctor->user) {
                     $result[] = [
-                        'name'   => $session->doctor->user->name,
+                        'id' => $session->id,
+                        'date' => $session->date,
+                        'name'   => $session->doctor->user->name.'('.$session->doctor->category->name.')',
                         'image'  => $session->doctor->image,
-                        'status' => $session->doctor->availability,
+                        'status' => $session->availability,
+                        'is_booked' => Appointment::where('session_id',$session->id)->where('patient_id',auth()->user()->id)->exists()
                     ];
                 }
             }
@@ -140,7 +151,18 @@ class CommonController extends Controller
     public function allDoctors()
     {
      try{   
-      return response()->json(Doctor::all());  
+       $doctors= DB::table('doctors')
+            ->join('categories', 'doctors.category_id', '=', 'categories.id')
+            ->join('users', 'doctors.user_id', '=', 'users.id')
+
+            ->select(
+                'doctors.id as id',
+                'users.name as name',
+                'categories.name as category',
+                'doctors.image as image'
+            )
+            ->get();
+      return response()->json($doctors);  
      }
      catch(Exception $e)
      {
@@ -151,7 +173,7 @@ class CommonController extends Controller
     public function allClinics()
     {
       try{  
-        return response()->json(Clinic::select('id', 'name', 'image')->get());
+        return response()->json(Clinic::select('id', 'name', 'image','description')->get());
     }
       catch(Exception $e)
       {
@@ -202,6 +224,7 @@ class CommonController extends Controller
                 if ($session->doctor && $session->doctor->category) {
                     $result[] = [
                         'name'   => $session->doctor->category->name,
+                        'id' => $session->doctor->category->id
                     ];
                 }
             }
@@ -302,5 +325,15 @@ class CommonController extends Controller
      }
 
     }
+    function categories()
+    {
+        try {
+            return response()->json(Category::select('id','name')->get());
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+
 }
 
