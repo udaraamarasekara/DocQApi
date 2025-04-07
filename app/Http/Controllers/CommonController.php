@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\DocSession;
 use App\Models\Doctor;
 use App\Models\Clinic;
+use App\Models\Nurse;
 use App\Models\Category;
 use Carbon\Carbon;
 use Exception;
@@ -66,6 +67,16 @@ class CommonController extends Controller
             'role'=> $user->role,
             'token' => $token
         ]);
+    }
+
+    public function logout(Request $request)
+    {
+    // Revoke the token that was used to authenticate the current request
+    $request->user()->currentAccessToken()->delete();
+
+    return response()->json([
+        'message' => 'Successfully logged out'
+    ]);
     }
 
     // Get clinics for a doctor
@@ -147,7 +158,33 @@ class CommonController extends Controller
             return response()->json(['error' => 'Something went wrong!'], 500);
         }
     }
+    public function doctorsForClinicNurse()
+    {
+        try {
+            $clinic_id = Nurse::where('user_id',auth()->user()->id)->first()->clinic_id;
+            $result = [];
+            $sessions = DocSession::where('clinic_id', $clinic_id)->with(['doctor.user','doctor.category'])->get();
 
+            foreach ($sessions as $session) {
+                if ($session->doctor && $session->doctor->user) {
+                    $result[] = [
+                        'id' => $session->id,
+                        'date' => $session->date,
+                        'name'   => $session->doctor->user->name,
+                        'image'  => $session->doctor->image,
+                        'status' => $session->availability,
+                        'category' => $session->doctor->category->name,
+                        'is_booked' => Appointment::where('session_id',$session->id)->where('patient_id',auth()->user()->id)->exists()
+                    ];
+                }
+            }
+
+            return response()->json($result);
+        } catch (\Exception $e) {dd($e);
+            Log::error('sessionsForClinic error: ' . $e->getMessage());
+            return response()->json(['error' => 'Something went wrong!'], 500);
+        }
+    }
     public function allDoctors()
     {
      try{   
@@ -307,6 +344,8 @@ class CommonController extends Controller
     {
      try{   
      Appointment::find($appointment_id)->update(['status'=>'checking']);
+     return response()->json(['success' => 'status updated!']);
+
      }   catch(Exception $e)
      {
          Log::error('sessionsForClinic error: ' . $e->getMessage());
@@ -318,6 +357,8 @@ class CommonController extends Controller
     {
      try{   
      Appointment::find($appointment_id)->update(['status'=>'checked']);
+     return response()->json(['success' => 'status updated!']);
+
      }   catch(Exception $e)
      {
          Log::error('sessionsForClinic error: ' . $e->getMessage());

@@ -12,6 +12,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/sessionsForDoctor/{doctor}', [CommonController::class, 'sessionsForDoctor']);
     Route::get('/sessionsForClinic/{clinic}', [CommonController::class, 'sessionsForClinic']);
     Route::get('/doctorsForClinic/{clinic}', [CommonController::class, 'doctorsForClinic']);
+    Route::get('/doctorsForClinicNurse', [CommonController::class, 'doctorsForClinicNurse']);
     Route::get('/allDoctors', [CommonController::class, 'allDoctors']);
     Route::get('/allClinics', [CommonController::class, 'allClinics']);
     Route::get('/mySession', [CommonController::class, 'getNearstSessionForDoc']);
