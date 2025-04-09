@@ -56,6 +56,11 @@
     "extra": {
         "laravel": {
             "dont-discover": []
+        },
+        "heroku": {
+            "php": {
+                "extensions": ["pdo_sqlite"]
+            }
         }
     },
     "config": {
