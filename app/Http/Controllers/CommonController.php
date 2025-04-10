@@ -75,7 +75,7 @@ class CommonController extends Controller
     $request->user()->currentAccessToken()->delete();
 
     return response()->json([
-        'message' => 'Successfully logged out'
+        'success' => 'Successfully logged out'
     ]);
     }
 
